@@ -1,0 +1,38 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main  # or your default branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --omit=dev
+
+      - name: Build Web
+        run: npm run build
+
+      - name: Setup Capacitor Android
+        run: npx cap add android || echo "Android folder exists, skipping"
+      - run: npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: serenity-cloud-spa-manager-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
